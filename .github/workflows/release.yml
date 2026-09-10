@@ -1,0 +1,79 @@
+# Builds, signs, notarizes, and publishes Fleet.app on every version tag.
+# After this runs, users install with no Xcode via the Homebrew cask.
+#
+# Required repository secrets:
+#   MACOS_CERT_P12          base64 of the "Developer ID Application" cert (.p12)
+#   MACOS_CERT_PASSWORD     password of that .p12
+#   MACOS_SIGN_IDENTITY     e.g. "Developer ID Application: Your Name (TEAMID)"
+#   NOTARY_APPLE_ID         Apple ID email used for notarization
+#   NOTARY_TEAM_ID          10-char Apple team ID
+#   NOTARY_PASSWORD         app-specific password for that Apple ID
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  release:
+    runs-on: macos-15  # macos-14 is deprecated (unsupported after 2026-11-02)
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Import signing certificate
+        env:
+          CERT_P12: ${{ secrets.MACOS_CERT_P12 }}
+          CERT_PASSWORD: ${{ secrets.MACOS_CERT_PASSWORD }}
+        run: |
+          echo "$CERT_P12" | base64 --decode > cert.p12
+          security create-keychain -p ci-temp build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p ci-temp build.keychain
+          security import cert.p12 -k build.keychain -P "$CERT_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k ci-temp build.keychain
+          rm cert.p12
+
+      - name: Build app
+        run: ./scripts/build-app.sh
+
+      - name: Sign (Developer ID, hardened runtime)
+        env:
+          IDENTITY: ${{ secrets.MACOS_SIGN_IDENTITY }}
+        run: |
+          # Sign nested executables first (e.g. a bundled tmux), then the app.
+          # Apple discourages --deep for distribution signing: nested code must
+          # be signed explicitly, inside-out, each with hardened runtime.
+          find dist/Fleet.app/Contents/Resources -type f -perm +111 2>/dev/null \
+            | while read -r bin; do
+                codesign --force --options runtime --timestamp --sign "$IDENTITY" "$bin"
+              done
+          codesign --force --options runtime --timestamp --sign "$IDENTITY" dist/Fleet.app
+          codesign --verify --strict --verbose=2 dist/Fleet.app
+
+      - name: Notarize and staple
+        env:
+          APPLE_ID: ${{ secrets.NOTARY_APPLE_ID }}
+          TEAM_ID: ${{ secrets.NOTARY_TEAM_ID }}
+          APP_PASSWORD: ${{ secrets.NOTARY_PASSWORD }}
+        run: |
+          ditto -c -k --keepParent dist/Fleet.app dist/Fleet-notarize.zip
+          xcrun notarytool submit dist/Fleet-notarize.zip \
+            --apple-id "$APPLE_ID" --team-id "$TEAM_ID" \
+            --password "$APP_PASSWORD" --wait
+          xcrun stapler staple dist/Fleet.app
+          rm dist/Fleet-notarize.zip
+
+      - name: Package release zip
+        run: |
+          ditto -c -k --keepParent dist/Fleet.app "dist/Fleet-${GITHUB_REF_NAME}.zip"
+          shasum -a 256 "dist/Fleet-${GITHUB_REF_NAME}.zip" | tee dist/checksum.txt
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/Fleet-*.zip
+            dist/checksum.txt
+          generate_release_notes: true

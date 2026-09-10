@@ -1,0 +1,17 @@
+# Regression suite on every push and PR. Mirrors scripts/build-app.sh's gate.
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: macos-15  # macos-14 is deprecated (unsupported after 2026-11-02)
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run tests
+        run: swift test
+      - name: Verify release build
+        run: swift build -c release
