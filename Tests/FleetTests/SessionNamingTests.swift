@@ -48,6 +48,17 @@ final class SessionNamingTests: XCTestCase {
         XCTAssertEqual(task, "session-3-2")
     }
 
+    // Regression: spawn() used to pass self.sessions (empty before the first
+    // async poll) to uniqueTask, so a pre-existing "Fleet" session was invisible
+    // and tmux.new-session would fail with a name collision.  spawn() now does
+    // a fresh tmux list-sessions query; this test guards the naming logic that
+    // consumes that result.
+    func testSpawnDeduplicatesAgainstLiveListWhenCacheIsStale() {
+        // Simulate: cached sessions = [], live tmux = ["Fleet"]
+        let task = SessionNaming.uniqueTask(repo: "Fleet", desired: "", existing: ["Fleet"])
+        XCTAssertEqual(task, "session-2", "must not attempt to create an already-existing session name")
+    }
+
     func testSanitizeStripsTmuxForbiddenCharacters() {
         // tmux forbids ':' and '.' in session names.
         XCTAssertEqual(SessionNaming.sanitize("  fix: v1.2 "), "fix- v1-2")

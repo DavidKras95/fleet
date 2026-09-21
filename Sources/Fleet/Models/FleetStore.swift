@@ -295,7 +295,14 @@ final class FleetStore: ObservableObject {
         // "New Agent" always creates a NEW session — multiple sessions of the
         // same directory are exactly the point, so a name collision gets an
         // auto-numbered task instead of silently jumping to the old one.
-        let task = uniqueTask(repo: base, desired: requestedTask)
+        // Use a fresh tmux query rather than self.sessions: on first launch
+        // the async poll may not have run yet, leaving sessions empty and
+        // causing a false "name is free" result for sessions that already exist.
+        let (lsStatus, lsOut) = Tmux.run(["list-sessions", "-F", "#{session_name}"])
+        let liveNames: [String] = lsStatus == 0
+            ? lsOut.split(separator: "\n").map(String.init)
+            : sessions.map(\.name)
+        let task = SessionNaming.uniqueTask(repo: base, desired: requestedTask, existing: liveNames)
         let name = task.isEmpty ? base : "\(base)/\(task)"
 
         var dir = directory
