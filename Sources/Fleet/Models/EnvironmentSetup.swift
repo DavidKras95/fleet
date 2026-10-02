@@ -13,6 +13,31 @@ enum EnvironmentSetup {
         ensureTmuxConfig(path: NSString(string: "~/.tmux.conf").expandingTildeInPath, reloadTmux: true)
     }
 
+    /// Installs missing CLI tools (tmux, jq) via Homebrew if brew is available.
+    /// Runs in the background; calls `completion` on the main actor when done
+    /// so the caller can re-run preflight.
+    static func installMissingTools(completion: @escaping @MainActor () -> Void) {
+        let missing = ["tmux", "jq"].filter { !Executables.isAvailable($0) }
+        guard !missing.isEmpty else {
+            Task { @MainActor in completion() }
+            return
+        }
+        guard let brew = Executables.find("brew") else {
+            Task { @MainActor in completion() }
+            return
+        }
+        Task.detached(priority: .utility) {
+            let p = Process()
+            p.executableURL = URL(fileURLWithPath: brew)
+            p.arguments = ["install"] + missing
+            p.standardOutput = Pipe()
+            p.standardError = Pipe()
+            try? p.run()
+            p.waitUntilExit()
+            await MainActor.run { completion() }
+        }
+    }
+
     // MARK: 1. Hook script
 
     static func installHookScript(at hookScriptPath: String) {

@@ -203,6 +203,7 @@ final class FleetStore: ObservableObject {
     func runPreflight() {
         preflightIssues = Preflight.issues(
             tmuxAvailable: Executables.isAvailable("tmux"),
+            jqAvailable: Executables.isAvailable("jq"),
             claudeAvailable: Executables.isAvailable("claude"))
     }
 
@@ -213,6 +214,9 @@ final class FleetStore: ObservableObject {
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.refresh() }
         }
+        // Auto-install tmux/jq via Homebrew if they're missing; re-run preflight
+        // after so the banner clears as soon as installation succeeds.
+        EnvironmentSetup.installMissingTools { [weak self] in self?.runPreflight() }
     }
 
     func refresh() {
