@@ -59,6 +59,17 @@ struct SidebarView: View {
                         )
                     )
             }
+            Button { win.showNewAgent = true } label: {
+                Label("New Agent", systemImage: "plus")
+                    .font(.system(size: store.uiFontSize, weight: .medium))
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.vertical, 9)
+                    .padding(.horizontal, 10)
+            }
+            .buttonStyle(.plain)
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: 3, leading: 8, bottom: 3, trailing: 8))
         }
         .listStyle(.sidebar)
         .onDrop(of: [UTType.plainText], isTargeted: nil) { _ in

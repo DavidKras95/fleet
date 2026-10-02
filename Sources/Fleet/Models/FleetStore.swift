@@ -60,6 +60,12 @@ final class FleetStore: ObservableObject {
     @Published var order: [String] {
         didSet { UserDefaults.standard.set(order, forKey: "sessionOrder") }
     }
+    @Published var appearanceMode: String {
+        didSet {
+            UserDefaults.standard.set(appearanceMode, forKey: "appearanceMode")
+            Self.applyAppearance(appearanceMode)
+        }
+    }
 
     /// Worktrees live in one global place so a session can be started from
     /// any folder, not just one under a configured repos folder.
@@ -80,7 +86,17 @@ final class FleetStore: ObservableObject {
         let uiSize = defaults.double(forKey: "uiFontSize")
         uiFontSize = uiSize > 0 ? uiSize : 13
         order = defaults.stringArray(forKey: "sessionOrder") ?? []
+        appearanceMode = defaults.string(forKey: "appearanceMode") ?? "system"
         TerminalCache.fontSize = terminalFontSize
+        Self.applyAppearance(appearanceMode)
+    }
+
+    static func applyAppearance(_ mode: String) {
+        switch mode {
+        case "light": NSApp.appearance = NSAppearance(named: .aqua)
+        case "dark":  NSApp.appearance = NSAppearance(named: .darkAqua)
+        default:      NSApp.appearance = nil
+        }
     }
 
     /// Sessions in stable, user-arranged order (drag to rearrange freely).

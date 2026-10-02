@@ -11,12 +11,22 @@ struct ContentView: View {
                 .navigationSplitViewColumnWidth(min: 200, ideal: 240)
                 .toolbar {
                     ToolbarItem {
-                        Button {
-                            win.showNewAgent = true
+                        Menu {
+                            Button { store.appearanceMode = "system" } label: {
+                                Label("System", systemImage: "circle.lefthalf.filled")
+                            }
+                            Button { store.appearanceMode = "light" } label: {
+                                Label("Light", systemImage: "sun.max")
+                            }
+                            Button { store.appearanceMode = "dark" } label: {
+                                Label("Dark", systemImage: "moon")
+                            }
                         } label: {
-                            Label("New Agent", systemImage: "plus")
+                            Image(systemName: store.appearanceMode == "dark" ? "moon"
+                                           : store.appearanceMode == "light" ? "sun.max"
+                                           : "circle.lefthalf.filled")
                         }
-                        .help("Launch a new agent (⌘N)")
+                        .help("Appearance")
                     }
                 }
         } detail: {

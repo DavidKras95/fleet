@@ -7,6 +7,14 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
+            Section("Appearance") {
+                Picker("Theme", selection: $store.appearanceMode) {
+                    Text("System").tag("system")
+                    Text("Light").tag("light")
+                    Text("Dark").tag("dark")
+                }
+                .pickerStyle(.segmented)
+            }
             Section("New Agent") {
                 Toggle("Start Claude Code automatically in new sessions", isOn: $store.autoStartClaude)
                 Toggle("Suggest repositories from a folder", isOn: $store.suggestRepos)
