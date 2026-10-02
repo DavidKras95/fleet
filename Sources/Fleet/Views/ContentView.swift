@@ -25,6 +25,9 @@ struct ContentView: View {
             } else if let selected = win.selection {
                 VStack(spacing: 0) {
                     SessionTabBar(session: selected)
+                    if store.initializingSessions.contains(selected) {
+                        ClaudeStartingBanner()
+                    }
                     TerminalHostView(session: selected, cache: win.terminals)
                         .id(selected) // fresh container per session — never reuse across switches
                 }

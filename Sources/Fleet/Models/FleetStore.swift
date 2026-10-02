@@ -14,6 +14,17 @@ final class FleetStore: ObservableObject {
     @Published var preflightIssues: [PreflightIssue] = []
     /// True while Homebrew is installing missing tools in the background.
     @Published var installingTools = false
+    /// Sessions whose `claude` process is still starting up (spawned with
+    /// autoStartClaude; cleared as soon as the first hook event arrives).
+    @Published var initializingSessions: Set<String> = []
+
+    /// Pure helper: given the current initializing set and the latest session
+    /// list, returns which names should remain initializing (still idle and
+    /// still alive). Exposed for unit testing.
+    nonisolated static func pendingInitializing(current: Set<String>, sessions: [AgentSession]) -> Set<String> {
+        let idleAlive = Set(sessions.filter { $0.state == .idle }.map(\.name))
+        return current.intersection(idleAlive)
+    }
     /// Tabs per session = tmux windows of that session.
     @Published var tabs: [String: [SessionTab]] = [:]
 
@@ -295,6 +306,12 @@ final class FleetStore: ObservableObject {
                     store.sessions = result
                     NSApp.dockTile.badgeLabel = store.waitingCount > 0 ? "\(store.waitingCount)" : ""
                 }
+                // Always re-evaluate — must not be inside the sessions-changed
+                // guard or a constant-result poll will never clear the spinner.
+                if !store.initializingSessions.isEmpty {
+                    store.initializingSessions = FleetStore.pendingInitializing(
+                        current: store.initializingSessions, sessions: result)
+                }
             }
         }
     }
@@ -353,6 +370,12 @@ final class FleetStore: ObservableObject {
             // Typed into the shell (not exec'd) so the shell survives if
             // claude exits, and the user's PATH/aliases apply.
             Tmux.run(["send-keys", "-t", "=\(name):", "claude", "Enter"])
+            initializingSessions.insert(name)
+            let sessionName = name
+            Task { @MainActor [weak self] in
+                try? await Task.sleep(for: .seconds(30))
+                self?.initializingSessions.remove(sessionName)
+            }
         }
 
         refresh()
