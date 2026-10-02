@@ -20,8 +20,8 @@ struct ContentView: View {
                     }
                 }
         } detail: {
-            if !store.preflightIssues.isEmpty {
-                PreflightBanner(issues: store.preflightIssues)
+            if store.installingTools || !store.preflightIssues.isEmpty {
+                PreflightBanner(issues: store.preflightIssues, installing: store.installingTools)
             } else if let selected = win.selection {
                 VStack(spacing: 0) {
                     SessionTabBar(session: selected)

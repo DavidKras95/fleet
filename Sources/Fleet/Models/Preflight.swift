@@ -9,19 +9,20 @@ struct PreflightIssue: Identifiable, Equatable {
 /// Startup dependency checks, so a missing tool produces a clear message
 /// instead of a silent, empty app.
 enum Preflight {
-    static func issues(tmuxAvailable: Bool, jqAvailable: Bool, claudeAvailable: Bool) -> [PreflightIssue] {
+    static func issues(tmuxAvailable: Bool, jqAvailable: Bool, claudeAvailable: Bool,
+                       brewAvailable: Bool) -> [PreflightIssue] {
         var out: [PreflightIssue] = []
         if !tmuxAvailable {
-            out.append(PreflightIssue(
-                id: "tmux",
-                title: "tmux not found",
-                fix: "Fleet runs agents inside tmux. Install it with:  brew install tmux"))
+            let fix = brewAvailable
+                ? "Fleet is installing tmux via Homebrew automatically."
+                : "Fleet auto-installs tmux via Homebrew — install Homebrew first (brew.sh), then relaunch Fleet."
+            out.append(PreflightIssue(id: "tmux", title: "tmux not found", fix: fix))
         }
         if !jqAvailable {
-            out.append(PreflightIssue(
-                id: "jq",
-                title: "jq not found",
-                fix: "Fleet's status hooks require jq to parse Claude events. Install it with:  brew install jq"))
+            let fix = brewAvailable
+                ? "Fleet is installing jq via Homebrew automatically."
+                : "Fleet auto-installs jq via Homebrew — install Homebrew first (brew.sh), then relaunch Fleet."
+            out.append(PreflightIssue(id: "jq", title: "jq not found", fix: fix))
         }
         if !claudeAvailable {
             out.append(PreflightIssue(

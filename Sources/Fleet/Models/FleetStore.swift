@@ -12,6 +12,8 @@ final class FleetStore: ObservableObject {
     @Published var pendingSelection: String?
     /// Missing-dependency warnings shown as a banner (empty = all good).
     @Published var preflightIssues: [PreflightIssue] = []
+    /// True while Homebrew is installing missing tools in the background.
+    @Published var installingTools = false
     /// Tabs per session = tmux windows of that session.
     @Published var tabs: [String: [SessionTab]] = [:]
 
@@ -204,7 +206,8 @@ final class FleetStore: ObservableObject {
         preflightIssues = Preflight.issues(
             tmuxAvailable: Executables.isAvailable("tmux"),
             jqAvailable: Executables.isAvailable("jq"),
-            claudeAvailable: Executables.isAvailable("claude"))
+            claudeAvailable: Executables.isAvailable("claude"),
+            brewAvailable: Executables.isAvailable("brew"))
     }
 
     func startPolling() {
@@ -216,7 +219,12 @@ final class FleetStore: ObservableObject {
         }
         // Auto-install tmux/jq via Homebrew if they're missing; re-run preflight
         // after so the banner clears as soon as installation succeeds.
-        EnvironmentSetup.installMissingTools { [weak self] in self?.runPreflight() }
+        let needsInstall = !Executables.isAvailable("tmux") || !Executables.isAvailable("jq")
+        if needsInstall { installingTools = true }
+        EnvironmentSetup.installMissingTools { [weak self] in
+            self?.installingTools = false
+            self?.runPreflight()
+        }
     }
 
     func refresh() {
