@@ -92,11 +92,11 @@ final class StatusResolverTests: XCTestCase {
         // its tab separators collapsed, so a whole "name state path sid" line
         // became one bogus session name that then failed to attach. Cross-
         // checking against the real session list must reject it.
-        let garbage = "fleet_busy_/Users/david_kr/git/.worktrees/notifier/testNotifier_"
-        let r = resolve([garbage, line("triage-agents", state: "done")],
-                        valid: ["fleet", "triage-agents"])
+        let garbage = "fleet_busy_/Users/testuser/git/.worktrees/myapp/testMyApp_"
+        let r = resolve([garbage, line("api-server", state: "done")],
+                        valid: ["fleet", "api-server"])
         XCTAssertNil(r[garbage], "a name tmux doesn't actually have must never appear")
-        XCTAssertEqual(r["triage-agents"], .done)
+        XCTAssertEqual(r["api-server"], .done)
     }
 
     func testValidSessionsFiltersUnknownNames() {

@@ -7,24 +7,24 @@ import XCTest
 final class SelectionRestoreTests: XCTestCase {
     func testRestoresStoredSelectionWhenItStillExists() {
         let s = SelectionRestore.resolve(
-            current: nil, stored: "triage-agents",
-            existing: ["frequency-cap-migration", "triage-agents"])
-        XCTAssertEqual(s, "triage-agents")
+            current: nil, stored: "my-app",
+            existing: ["api-server", "my-app"])
+        XCTAssertEqual(s, "my-app")
     }
 
     func testDropsStoredSelectionWhenSessionIsGone() {
         // A session closed while the app was shut — don't try to attach to it.
         let s = SelectionRestore.resolve(
-            current: nil, stored: "old-session", existing: ["triage-agents"])
+            current: nil, stored: "old-session", existing: ["my-app"])
         XCTAssertNil(s)
     }
 
     func testKeepsCurrentSelectionOverStored() {
         // The user already picked something this launch — never yank them off it.
         let s = SelectionRestore.resolve(
-            current: "frequency-cap-migration", stored: "triage-agents",
-            existing: ["frequency-cap-migration", "triage-agents"])
-        XCTAssertEqual(s, "frequency-cap-migration")
+            current: "api-server", stored: "my-app",
+            existing: ["api-server", "my-app"])
+        XCTAssertEqual(s, "api-server")
     }
 
     func testNoStoredSelectionLeavesNothingSelected() {

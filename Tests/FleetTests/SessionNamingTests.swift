@@ -6,45 +6,45 @@ import XCTest
 /// session instead of creating a new one.
 final class SessionNamingTests: XCTestCase {
     func testFirstSessionWithNoTaskUsesBareRepoName() {
-        let task = SessionNaming.uniqueTask(repo: "kraken", desired: "", existing: [])
+        let task = SessionNaming.uniqueTask(repo: "my-app", desired: "", existing: [])
         XCTAssertEqual(task, "")
     }
 
     func testSecondSessionWithNoTaskIsNamedSessionTwoNotBareNumber() {
-        let task = SessionNaming.uniqueTask(repo: "kraken", desired: "", existing: ["kraken"])
+        let task = SessionNaming.uniqueTask(repo: "my-app", desired: "", existing: ["my-app"])
         XCTAssertEqual(task, "session-2")
     }
 
     func testRepeatedBlankSpawnsKeepCounting() {
         let task = SessionNaming.uniqueTask(
-            repo: "kraken", desired: "", existing: ["kraken", "kraken/session-2"])
+            repo: "my-app", desired: "", existing: ["my-app", "my-app/session-2"])
         XCTAssertEqual(task, "session-3")
     }
 
     func testExplicitTaskIsKeptWhenFree() {
-        let task = SessionNaming.uniqueTask(repo: "kraken", desired: "fix-auth", existing: ["kraken"])
+        let task = SessionNaming.uniqueTask(repo: "my-app", desired: "fix-auth", existing: ["my-app"])
         XCTAssertEqual(task, "fix-auth")
     }
 
     func testExplicitTaskCollisionGetsNumericSuffix() {
         let task = SessionNaming.uniqueTask(
-            repo: "kraken", desired: "fix-auth", existing: ["kraken/fix-auth"])
+            repo: "my-app", desired: "fix-auth", existing: ["my-app/fix-auth"])
         XCTAssertEqual(task, "fix-auth-2")
     }
 
     func testRenamingToOwnCurrentNameIsNotACollision() {
         let task = SessionNaming.uniqueTask(
-            repo: "kraken", desired: "session-2",
-            existing: ["kraken", "kraken/session-2"],
-            excluding: "kraken/session-2")
+            repo: "my-app", desired: "session-2",
+            existing: ["my-app", "my-app/session-2"],
+            excluding: "my-app/session-2")
         XCTAssertEqual(task, "session-2")
     }
 
     func testRenamingOntoAnotherSessionsNameStillDedupes() {
         let task = SessionNaming.uniqueTask(
-            repo: "kraken", desired: "session-3",
-            existing: ["kraken/session-2", "kraken/session-3"],
-            excluding: "kraken/session-2")
+            repo: "my-app", desired: "session-3",
+            existing: ["my-app/session-2", "my-app/session-3"],
+            excluding: "my-app/session-2")
         XCTAssertEqual(task, "session-3-2")
     }
 

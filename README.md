@@ -6,10 +6,10 @@ terminal on the right, tmux underneath so nothing ever dies with the app.
 
 ```
 ┌─────────────────────┬──────────────────────────────────┐
-│ 🔴 kraken/fix-auth  │                                  │
-│ ⏳ isolation-engine │   the selected agent's live      │
-│ 🟢 EE/demo          │   terminal (SwiftTerm + tmux)    │
-│ ⚪ notifier         │                                  │
+│ 🔴 my-app/fix-auth  │                                  │
+│ ⏳ api-server       │   the selected agent's live      │
+│ 🟢 frontend/demo    │   terminal (SwiftTerm + tmux)    │
+│ ⚪ infra            │                                  │
 └─────────────────────┴──────────────────────────────────┘
 ```
 

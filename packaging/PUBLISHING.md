@@ -41,9 +41,9 @@ brew install --cask <owner>/fleet/fleet-app
 
 What it takes (one-time):
 
-1. **Apple Developer Program membership** ($99/year, or Optimove's org
-   account) → create a **"Developer ID Application"** certificate in the
-   Apple Developer portal, export as `.p12`.
+1. **Apple Developer Program membership** ($99/year) → create a
+   **"Developer ID Application"** certificate in the Apple Developer portal,
+   export as `.p12`.
 2. **App-specific password** for notarization (appleid.apple.com →
    Sign-In & Security → App-Specific Passwords).
 3. Add the six secrets listed at the top of

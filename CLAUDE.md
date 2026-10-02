@@ -1,8 +1,7 @@
 # Fleet — project context for Claude Code
 
 Native macOS app for running many Claude Code agents in parallel. SwiftUI +
-SwiftTerm over a tmux engine. Built iteratively with Claude Code (Aug–Sep 2026)
-on the owner's work Mac; development continues on their personal Mac.
+SwiftTerm over a tmux engine.
 
 ## What it is (30 seconds)
 
@@ -54,8 +53,7 @@ permission/"needs your"/"wants to" = red; anything else = leave state alone.
   mutation-tested (re-break the code, watch the test fail, restore).
   `swift test` ~3s, no tmux/app needed. `build-app.sh` refuses to build red.
 - **Owner drives git.** Never commit or push proactively; leave changes for
-  their review. (Repo currently has NO commits — first commit happens on the
-  personal Mac.)
+  their review.
 - **Owner's UX anti-requirements** (learned from rejecting Claude Squad):
   no forced worktrees (opt-in only), no preview indirection (the terminal you
   see is real), no per-repo silos, boring/reliable over clever.
@@ -85,24 +83,7 @@ permission/"needs your"/"wants to" = red; anything else = leave state alone.
   content is read fresh each event, though).
 - tmux exact-match targets: sessions `=name`, but `send-keys` needs `=name:`.
 
-## Current state & the publishing task (next up)
-
-Everything through beta-prep is DONE on the work Mac: features, 82-test suite,
-icon (AI artwork), welcome sheet, preflight, BETA.md, LICENSE (MIT),
-CI (`.github/workflows/ci.yml`, macos-15) and release pipeline
-(`release.yml`: sign → notarize → staple → GitHub release; secrets listed at
-top of the file), Homebrew formula + cask templates in `packaging/`.
-
-**Remaining, in order (details in `packaging/PUBLISHING.md`):**
-1. First git commit + push to a private GitHub repo (owner does this).
-2. Apple Developer account → "Developer ID Application" cert → export .p12.
-3. Add the 6 secrets from `release.yml` to the GitHub repo.
-4. `git tag v1.0.0 && git push --tags` → CI produces the signed, notarized zip.
-5. Create the `homebrew-fleet` tap with `packaging/fleet-app-cask.rb`
-   (fill sha256) → friend installs via one brew command.
-6. Deferred by choice: bundling tmux/jq inside the app (`Executables.find`
-   already checks `Contents/Resources` first, so it's a drop-in later);
-   `claude` itself can never be bundled (it's the user's own auth).
+## Publishing
 
 Tester-facing instructions live in `BETA.md`. On any new machine the app
 self-installs its environment on first launch — no manual setup steps.

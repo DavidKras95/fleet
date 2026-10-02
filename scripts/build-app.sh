@@ -46,7 +46,7 @@ BUILD_NUMBER="$(date +%Y%m%d.%H%M%S)"
 # Sparkle public key — set SPARKLE_PUBLIC_KEY in the environment before building
 # (or update the default below after running scripts/generate-sparkle-keys.sh).
 # An empty/placeholder value disables update checking safely; it's fine for local dev.
-SPARKLE_PUBLIC_KEY="${SPARKLE_PUBLIC_KEY:-}"
+SPARKLE_PUBLIC_KEY="${SPARKLE_PUBLIC_KEY:-HaQOJmTcNfujozNyZzKBuaRiHmzpmQmSttxMA/K3grU=}"
 
 cat > "$APP/Contents/Info.plist" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
