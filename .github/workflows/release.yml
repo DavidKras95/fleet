@@ -1,5 +1,6 @@
 # Builds, signs, notarizes, and publishes Fleet.app on every version tag.
-# After this runs, users install with no Xcode via the Homebrew cask.
+# After this runs users can install via the Homebrew cask, and existing
+# installs are notified by Sparkle and can update in one click.
 #
 # Required repository secrets:
 #   MACOS_CERT_P12          base64 of the "Developer ID Application" cert (.p12)
@@ -8,6 +9,8 @@
 #   NOTARY_APPLE_ID         Apple ID email used for notarization
 #   NOTARY_TEAM_ID          10-char Apple team ID
 #   NOTARY_PASSWORD         app-specific password for that Apple ID
+#   SPARKLE_PRIVATE_KEY     EdDSA private key from scripts/generate-sparkle-keys.sh
+#   SPARKLE_PUBLIC_KEY      EdDSA public key (same run); also paste into build-app.sh
 name: Release
 
 on:
@@ -16,11 +19,14 @@ on:
 
 jobs:
   release:
-    runs-on: macos-15  # macos-14 is deprecated (unsupported after 2026-11-02)
+    runs-on: macos-15
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Need full history so we can push the updated appcast back to main.
+          fetch-depth: 0
 
       - name: Import signing certificate
         env:
@@ -36,20 +42,28 @@ jobs:
           rm cert.p12
 
       - name: Build app
+        env:
+          SPARKLE_PUBLIC_KEY: ${{ secrets.SPARKLE_PUBLIC_KEY }}
         run: ./scripts/build-app.sh
 
       - name: Sign (Developer ID, hardened runtime)
         env:
           IDENTITY: ${{ secrets.MACOS_SIGN_IDENTITY }}
         run: |
-          # Sign nested executables first (e.g. a bundled tmux), then the app.
-          # Apple discourages --deep for distribution signing: nested code must
-          # be signed explicitly, inside-out, each with hardened runtime.
+          # Sign nested frameworks (Sparkle) first — inside-out rule.
+          find dist/Fleet.app/Contents/Frameworks -name "*.framework" -type d 2>/dev/null \
+            | while read -r fw; do
+                codesign --force --options runtime --timestamp --sign "$IDENTITY" "$fw"
+              done
+          # Sign nested executables in Resources.
           find dist/Fleet.app/Contents/Resources -type f -perm +111 2>/dev/null \
             | while read -r bin; do
                 codesign --force --options runtime --timestamp --sign "$IDENTITY" "$bin"
               done
-          codesign --force --options runtime --timestamp --sign "$IDENTITY" dist/Fleet.app
+          # Sign the app with entitlements (required for hardened runtime + Sparkle).
+          codesign --force --options runtime --timestamp \
+            --entitlements Resources/Fleet.entitlements \
+            --sign "$IDENTITY" dist/Fleet.app
           codesign --verify --strict --verbose=2 dist/Fleet.app
 
       - name: Notarize and staple
@@ -69,6 +83,61 @@ jobs:
         run: |
           ditto -c -k --keepParent dist/Fleet.app "dist/Fleet-${GITHUB_REF_NAME}.zip"
           shasum -a 256 "dist/Fleet-${GITHUB_REF_NAME}.zip" | tee dist/checksum.txt
+
+      - name: Download Sparkle CLI tools
+        run: |
+          SPARKLE_VERSION="2.6.4"
+          curl -fsSL \
+            "https://github.com/sparkle-project/Sparkle/releases/download/${SPARKLE_VERSION}/Sparkle-${SPARKLE_VERSION}.tar.xz" \
+            | tar -xJ -C /tmp/sparkle-tools
+          echo "SPARKLE_BIN=/tmp/sparkle-tools/bin" >> "$GITHUB_ENV"
+
+      - name: Sign zip and generate appcast entry
+        env:
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          VERSION="${TAG#v}"
+          ZIP="dist/Fleet-${TAG}.zip"
+          SIZE=$(stat -f%z "$ZIP")
+          SIGNATURE=$("$SPARKLE_BIN/sign_update" "$ZIP" "$SPARKLE_PRIVATE_KEY")
+          PUBDATE=$(date -u "+%a, %d %b %Y %H:%M:%S +0000")
+          DOWNLOAD_URL="https://github.com/${{ github.repository }}/releases/download/${TAG}/Fleet-${TAG}.zip"
+
+          ITEM=$(cat <<XMLEOF
+          <item>
+              <title>Fleet ${VERSION}</title>
+              <sparkle:version>${VERSION}</sparkle:version>
+              <sparkle:shortVersionString>${VERSION}</sparkle:shortVersionString>
+              <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+              <pubDate>${PUBDATE}</pubDate>
+              <enclosure
+                  url="${DOWNLOAD_URL}"
+                  sparkle:edSignature="${SIGNATURE}"
+                  length="${SIZE}"
+                  type="application/octet-stream"/>
+          </item>
+          XMLEOF
+          )
+
+          # Prepend new item before the insert-point comment.
+          python3 - "$ITEM" docs/appcast.xml <<'PYEOF'
+          import sys, re
+          item = sys.argv[1]
+          path = sys.argv[2]
+          content = open(path).read()
+          marker = "<!-- APPCAST_INSERT_POINT -->"
+          updated = content.replace(marker, item + "\n        " + marker)
+          open(path, "w").write(updated)
+          PYEOF
+
+      - name: Commit updated appcast to main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/appcast.xml
+          git commit -m "appcast: add ${GITHUB_REF_NAME} [skip ci]"
+          git push origin HEAD:main
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2

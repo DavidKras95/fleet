@@ -3,7 +3,12 @@ import SwiftUI
 
 struct SettingsView: View {
     @EnvironmentObject var store: FleetStore
+    @EnvironmentObject var updater: UpdaterViewModel
     @ObservedObject private var notifications = NotificationManager.shared
+    @ObservedObject private var license = LicenseManager.shared
+    @State private var licenseKey = ""
+    @State private var licenseEmail = ""
+    @State private var activating = false
 
     var body: some View {
         Form {
@@ -14,6 +19,43 @@ struct SettingsView: View {
                     Text("Dark").tag("dark")
                 }
                 .pickerStyle(.segmented)
+            }
+            Section("Updates") {
+                HStack {
+                    Button("Check for Updates…") { updater.checkForUpdates() }
+                        .disabled(!updater.canCheckForUpdates)
+                    Spacer()
+                    Text("Fleet auto-checks on launch")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            Section("License") {
+                licenseStatusRow
+                if case .active = license.status {} else {
+                    // Activation UI — wired up but waiting for payment provider.
+                    // Remove the "disabled" modifier and implement activate() in
+                    // LicenseManager when Fleet goes paid.
+                    TextField("Email", text: $licenseEmail)
+                    TextField("License key", text: $licenseKey)
+                    HStack {
+                        Button {
+                            activating = true
+                            Task {
+                                await license.activate(key: licenseKey, email: licenseEmail)
+                                activating = false
+                            }
+                        } label: {
+                            if activating { ProgressView().scaleEffect(0.7) }
+                            else { Text("Activate") }
+                        }
+                        .disabled(true) // remove when payment provider is wired up
+                        Spacer()
+                        Text("Fleet is free during the preview period")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
             }
             Section("New Agent") {
                 Toggle("Start Claude Code automatically in new sessions", isOn: $store.autoStartClaude)
@@ -64,8 +106,23 @@ struct SettingsView: View {
         .frame(width: 520)
         .fixedSize(horizontal: false, vertical: true)
         .onChange(of: store.suggestRepos) { _, on in
-            // Prefill a sensible folder the first time suggestions are enabled.
             if on, store.reposFolder.isEmpty { store.reposFolder = FleetStore.detectGitHome() }
+        }
+    }
+
+    @ViewBuilder
+    private var licenseStatusRow: some View {
+        switch license.status {
+        case .free:
+            Label("Free preview — all features unlocked", systemImage: "gift.fill")
+                .foregroundStyle(.green)
+        case .active(let email):
+            Label("Licensed to \(email)", systemImage: "checkmark.seal.fill")
+                .foregroundStyle(.green)
+            Button("Deactivate", role: .destructive) { license.deactivate() }
+        case .invalid:
+            Label("Invalid license key", systemImage: "xmark.circle.fill")
+                .foregroundStyle(.red)
         }
     }
 

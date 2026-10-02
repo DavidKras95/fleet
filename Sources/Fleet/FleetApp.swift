@@ -4,6 +4,7 @@ import SwiftUI
 struct FleetApp: App {
     @StateObject private var store = FleetStore()
     @StateObject private var keys = KeybindingStore()
+    @StateObject private var updater = UpdaterViewModel()
 
     var body: some Scene {
         WindowGroup(id: "main") {
@@ -19,12 +20,13 @@ struct FleetApp: App {
                 }
                 .frame(minWidth: 900, minHeight: 560)
         }
-        .commands { FleetCommands(store: store, keys: keys) }
+        .commands { FleetCommands(store: store, keys: keys, updater: updater) }
 
         Settings {
             TabView {
                 SettingsView()
                     .environmentObject(store)
+                    .environmentObject(updater)
                     .tabItem { Label("General", systemImage: "gearshape") }
                 ShortcutsSettingsView()
                     .environmentObject(keys)
@@ -39,12 +41,17 @@ struct FleetApp: App {
 struct FleetCommands: Commands {
     @ObservedObject var store: FleetStore
     @ObservedObject var keys: KeybindingStore
+    @ObservedObject var updater: UpdaterViewModel
     @FocusedObject private var win: WindowState?
     @Environment(\.openWindow) private var openWindow
 
     private func sc(_ cmd: AppCommand) -> KeyboardShortcut? { keys.combo(for: cmd)?.keyboardShortcut }
 
     var body: some Commands {
+        CommandGroup(after: .appInfo) {
+            Button("Check for Updates…") { updater.checkForUpdates() }
+                .disabled(!updater.canCheckForUpdates)
+        }
         CommandGroup(replacing: .newItem) {
             Button("New Agent…") { win?.showNewAgent = true }
                 .keyboardShortcut(sc(.newAgent))

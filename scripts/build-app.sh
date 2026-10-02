@@ -22,17 +22,31 @@ swift build -c release
 
 APP=dist/Fleet.app
 rm -rf dist
-mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
+mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources" "$APP/Contents/Frameworks"
 cp .build/release/Fleet "$APP/Contents/MacOS/Fleet"
 # Icon needs BOTH forms: Assets.car for macOS 26+ (Tahoe reads
 # CFBundleIconName from the asset catalog), .icns for older macOS.
 cp Resources/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
 cp Resources/Assets.car "$APP/Contents/Resources/Assets.car"
 
+# Embed Sparkle.framework so the OS can load it at @executable_path/../Frameworks.
+SPARKLE_FW=$(find .build/artifacts -name "Sparkle.framework" -type d 2>/dev/null | head -1)
+if [ -n "$SPARKLE_FW" ]; then
+    cp -R "$SPARKLE_FW" "$APP/Contents/Frameworks/Sparkle.framework"
+    codesign --force --sign - "$APP/Contents/Frameworks/Sparkle.framework"
+else
+    echo "Warning: Sparkle.framework not found in .build/artifacts — update checking won't work." >&2
+fi
+
 # Unique build number per build — correct release hygiene, and it busts
 # macOS's icon cache (which keys on bundle identity+version, so a changed
 # icon never shows if the version stays constant).
 BUILD_NUMBER="$(date +%Y%m%d.%H%M%S)"
+
+# Sparkle public key — set SPARKLE_PUBLIC_KEY in the environment before building
+# (or update the default below after running scripts/generate-sparkle-keys.sh).
+# An empty/placeholder value disables update checking safely; it's fine for local dev.
+SPARKLE_PUBLIC_KEY="${SPARKLE_PUBLIC_KEY:-}"
 
 cat > "$APP/Contents/Info.plist" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
@@ -50,6 +64,8 @@ cat > "$APP/Contents/Info.plist" <<EOF
     <key>LSMinimumSystemVersion</key><string>14.0</string>
     <key>NSHighResolutionCapable</key><true/>
     <key>NSPrincipalClass</key><string>NSApplication</string>
+    <key>SUFeedURL</key><string>https://davidkras95.github.io/fleet/appcast.xml</string>
+    <key>SUPublicEDKey</key><string>${SPARKLE_PUBLIC_KEY}</string>
 </dict>
 </plist>
 EOF
