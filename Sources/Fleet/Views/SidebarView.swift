@@ -9,6 +9,33 @@ private final class SidebarClickContext {
     var rowFrames: [String: CGRect] = [:]
 }
 
+private struct NewAgentButton: View {
+    let action: () -> Void
+    @State private var hovered = false
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                Image(systemName: "plus.circle.fill")
+                    .font(.system(size: 15, weight: .semibold))
+                    .scaleEffect(hovered ? 1.15 : 1.0)
+                Text("New Agent")
+                    .font(.system(size: 13, weight: .semibold))
+            }
+            .foregroundStyle(hovered ? Color.white : Color.white.opacity(0.5))
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(Color.white.opacity(hovered ? 0.08 : 0))
+            )
+            .animation(.spring(response: 0.25, dampingFraction: 0.7), value: hovered)
+        }
+        .buttonStyle(.plain)
+        .onHover { hovered = $0 }
+    }
+}
+
 struct SidebarView: View {
     @EnvironmentObject var store: FleetStore
     @EnvironmentObject var win: WindowState
@@ -59,17 +86,9 @@ struct SidebarView: View {
                         )
                     )
             }
-            Button { win.showNewAgent = true } label: {
-                Label("New Agent", systemImage: "plus")
-                    .font(.system(size: store.uiFontSize, weight: .medium))
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.vertical, 9)
-                    .padding(.horizontal, 10)
-            }
-            .buttonStyle(.plain)
+            NewAgentButton { win.showNewAgent = true }
             .listRowSeparator(.hidden)
-            .listRowInsets(EdgeInsets(top: 3, leading: 8, bottom: 3, trailing: 8))
+            .listRowInsets(EdgeInsets(top: 6, leading: 8, bottom: 6, trailing: 8))
         }
         .listStyle(.sidebar)
         .onDrop(of: [UTType.plainText], isTargeted: nil) { _ in
