@@ -9,5 +9,17 @@
         <language>en</language>
         <!-- Release entries are prepended here automatically by the release workflow. -->
         <!-- APPCAST_INSERT_POINT -->
+        <item>
+            <title>Fleet 1.0.1 (test)</title>
+            <pubDate>Sat, 04 Oct 2026 12:00:00 +0000</pubDate>
+            <enclosure
+                url="https://github.com/DavidKras95/fleet/releases/download/v1.0.1-test/Fleet-v1.0.1-test.zip"
+                sparkle:version="2"
+                sparkle:shortVersionString="1.0.1"
+                sparkle:edSignature="oc1JpfrK9ognXnsdTZukXjSkVw7z3Wp/ocfUWeDbwf/YKdA9C9FuAps/MXi+uGy/JUIpOUkT1ZSx4pYrnjkvCQ=="
+                length="3904244"
+                type="application/octet-stream"
+            />
+        </item>
     </channel>
 </rss>
