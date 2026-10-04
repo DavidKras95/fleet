@@ -24,6 +24,7 @@ APP=dist/Fleet.app
 rm -rf dist
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources" "$APP/Contents/Frameworks"
 cp .build/release/Fleet "$APP/Contents/MacOS/Fleet"
+install_name_tool -add_rpath "@executable_path/../Frameworks" "$APP/Contents/MacOS/Fleet"
 # Icon needs BOTH forms: Assets.car for macOS 26+ (Tahoe reads
 # CFBundleIconName from the asset catalog), .icns for older macOS.
 cp Resources/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
@@ -41,7 +42,7 @@ fi
 # Unique build number per build — correct release hygiene, and it busts
 # macOS's icon cache (which keys on bundle identity+version, so a changed
 # icon never shows if the version stays constant).
-BUILD_NUMBER="$(date +%Y%m%d.%H%M%S)"
+BUILD_NUMBER="${FLEET_BUILD_NUMBER:-$(date +%Y%m%d.%H%M%S)}"
 
 # Sparkle public key — set SPARKLE_PUBLIC_KEY in the environment before building
 # (or update the default below after running scripts/generate-sparkle-keys.sh).
