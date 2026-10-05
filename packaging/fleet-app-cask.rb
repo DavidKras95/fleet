@@ -6,10 +6,10 @@ cask "fleet-app" do
   version "1.0.0"
   sha256 "REPLACE_WITH_ZIP_SHA256"
 
-  url "https://github.com/REPLACE_OWNER/fleet-app/releases/download/v#{version}/Fleet-v#{version}.zip"
+  url "https://github.com/DavidKras95/fleet/releases/download/v#{version}/Fleet-v#{version}.zip"
   name "Fleet"
   desc "Native macOS manager for parallel Claude Code agents, tmux-backed"
-  homepage "https://github.com/REPLACE_OWNER/fleet-app"
+  homepage "https://github.com/DavidKras95/fleet"
 
   depends_on macos: ">= :sonoma"
   depends_on formula: "tmux"

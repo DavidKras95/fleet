@@ -28,22 +28,22 @@ quick tasks. Fleet's rules, learned the hard way:
 
 ## Install
 
-### Homebrew (when published — see packaging/PUBLISHING.md)
+### Homebrew (recommended)
 
 ```bash
-brew install --cask <owner>/fleet/fleet-app   # pre-built, no Xcode needed
-brew install <owner>/fleet/fleet-app          # or: build from source (needs Xcode)
+brew install --cask davidkras95/fleet/fleet-app
 ```
+
+Installs Fleet plus tmux and jq automatically. Only prerequisite: [Claude Code](https://claude.com/claude-code) on your PATH.
 
 ### From source
 
 ```bash
-git clone <this repo> && cd fleet-app
+git clone https://github.com/DavidKras95/fleet && cd fleet
 ./scripts/build-app.sh --install   # builds and copies to /Applications
 ```
 
-Requirements: macOS 14+, Xcode 15+, [Claude Code](https://claude.com/claude-code)
-on your PATH, tmux (`brew install tmux`; the formula installs it for you).
+Requirements: macOS 14+, Xcode 15+, [Claude Code](https://claude.com/claude-code) on your PATH.
 
 **There is no setup step.** On first launch Fleet installs everything it
 needs, idempotently: the Claude Code status hooks (`~/.claude/hooks/` plus

@@ -1,3 +1,13 @@
+# Publishing Fleet
+
+## TL;DR — what a release looks like once everything is set up
+
+1. `git tag v1.0.0 && git push --tags` — CI builds, signs, notarizes, uploads zip, updates appcast, creates GitHub Release automatically.
+2. Update `version` + `sha256` in the Homebrew tap cask — paste the sha256 from the release's `checksum.txt`.
+3. Done. Existing users get an in-app Sparkle prompt; new users install via `brew install --cask davidkras95/fleet/fleet-app`.
+
+---
+
 # Publishing Fleet to Homebrew (one-liner install)
 
 Goal: anyone on the team runs

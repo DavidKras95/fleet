@@ -44,7 +44,10 @@ jobs:
       - name: Build app
         env:
           SPARKLE_PUBLIC_KEY: ${{ secrets.SPARKLE_PUBLIC_KEY }}
-        run: ./scripts/build-app.sh
+          FLEET_VERSION: ${{ github.ref_name }}
+        run: |
+          VERSION="${FLEET_VERSION#v}"
+          FLEET_VERSION="$VERSION" ./scripts/build-app.sh
 
       - name: Sign (Developer ID, hardened runtime)
         env:
@@ -104,9 +107,11 @@ jobs:
           PUBDATE=$(date -u "+%a, %d %b %Y %H:%M:%S +0000")
           DOWNLOAD_URL="https://github.com/${{ github.repository }}/releases/download/${TAG}/Fleet-${TAG}.zip"
 
+          RELEASE_URL="https://github.com/${{ github.repository }}/releases/tag/${TAG}"
           ITEM=$(cat <<XMLEOF
           <item>
               <title>Fleet ${VERSION}</title>
+              <sparkle:releaseNotesLink>${RELEASE_URL}</sparkle:releaseNotesLink>
               <sparkle:version>${VERSION}</sparkle:version>
               <sparkle:shortVersionString>${VERSION}</sparkle:shortVersionString>
               <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
