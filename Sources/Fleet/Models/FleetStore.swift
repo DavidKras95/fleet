@@ -394,6 +394,12 @@ final class FleetStore: ObservableObject {
             }
         }
 
+        // Optimistic insert — shows the cube immediately instead of waiting for
+        // the async refresh to complete (which would leave the sidebar empty for
+        // up to ~300 ms after the sheet closes).
+        if !sessions.contains(where: { $0.name == name }) {
+            sessions.append(AgentSession(name: name, state: .idle))
+        }
         refresh()
         return name
     }

@@ -75,7 +75,9 @@ codesign --force --sign - "$APP"
 echo "Built $APP"
 
 if [ "${1:-}" = "--install" ]; then
+    pkill -x Fleet 2>/dev/null || true   # kill stale instance before replacing binary
     rm -rf /Applications/Fleet.app
     cp -R "$APP" /Applications/Fleet.app
     echo "Installed /Applications/Fleet.app"
+    open /Applications/Fleet.app
 fi
