@@ -109,7 +109,7 @@ jobs:
           SPARKLE_VERSION="2.6.4"
           curl -fsSL \
             "https://github.com/sparkle-project/Sparkle/releases/download/${SPARKLE_VERSION}/Sparkle-${SPARKLE_VERSION}.tar.xz" \
-            | tar -xJ -C /tmp/sparkle-tools
+            | (mkdir -p /tmp/sparkle-tools && tar -xJ -C /tmp/sparkle-tools)
           echo "SPARKLE_BIN=/tmp/sparkle-tools/bin" >> "$GITHUB_ENV"
 
       - name: Sign zip and generate appcast entry
