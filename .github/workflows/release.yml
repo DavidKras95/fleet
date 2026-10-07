@@ -116,11 +116,16 @@ jobs:
         env:
           SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
         run: |
+          set -x
           TAG="${GITHUB_REF_NAME}"
           VERSION="${TAG#v}"
           ZIP="dist/Fleet-${TAG}.zip"
+          ls -lh "$ZIP" || { echo "ZIP not found: $ZIP"; exit 1; }
           SIZE=$(stat -f%z "$ZIP")
-          SIGNATURE=$("$SPARKLE_BIN/sign_update" "$ZIP" "$SPARKLE_PRIVATE_KEY")
+          ls -la "$SPARKLE_BIN/sign_update" || { echo "sign_update not found at $SPARKLE_BIN"; exit 1; }
+          SIGNATURE=$("$SPARKLE_BIN/sign_update" "$ZIP" "$SPARKLE_PRIVATE_KEY") \
+            || { echo "sign_update failed with key length ${#SPARKLE_PRIVATE_KEY}"; exit 1; }
+          echo "SIGNATURE=$SIGNATURE"
           PUBDATE=$(date -u "+%a, %d %b %Y %H:%M:%S +0000")
           DOWNLOAD_URL="https://github.com/${{ github.repository }}/releases/download/${TAG}/Fleet-${TAG}.zip"
 
