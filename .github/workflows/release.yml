@@ -116,16 +116,17 @@ jobs:
         env:
           SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
         run: |
-          set -x
           TAG="${GITHUB_REF_NAME}"
           VERSION="${TAG#v}"
           ZIP="dist/Fleet-${TAG}.zip"
-          ls -lh "$ZIP" || { echo "ZIP not found: $ZIP"; exit 1; }
           SIZE=$(stat -f%z "$ZIP")
-          ls -la "$SPARKLE_BIN/sign_update" || { echo "sign_update not found at $SPARKLE_BIN"; exit 1; }
-          SIGNATURE=$("$SPARKLE_BIN/sign_update" "$ZIP" "$SPARKLE_PRIVATE_KEY") \
-            || { echo "sign_update failed with key length ${#SPARKLE_PRIVATE_KEY}"; exit 1; }
-          echo "SIGNATURE=$SIGNATURE"
+          # sign_update 2.x requires the key as a file, not a positional arg.
+          KEY_FILE=$(mktemp)
+          echo -n "$SPARKLE_PRIVATE_KEY" > "$KEY_FILE"
+          RAW=$("$SPARKLE_BIN/sign_update" "$ZIP" --ed-key-file "$KEY_FILE")
+          rm -f "$KEY_FILE"
+          # Output is: sparkle:edSignature="<sig>" length="<n>" — extract just the sig.
+          SIGNATURE=$(echo "$RAW" | sed 's/.*sparkle:edSignature="\([^"]*\)".*/\1/')
           PUBDATE=$(date -u "+%a, %d %b %Y %H:%M:%S +0000")
           DOWNLOAD_URL="https://github.com/${{ github.repository }}/releases/download/${TAG}/Fleet-${TAG}.zip"
 
