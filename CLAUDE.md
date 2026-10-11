@@ -62,6 +62,13 @@ permission/"needs your"/"wants to" = red; anything else = leave state alone.
 
 ## Hard-won gotchas (do not relearn these)
 
+- **tmux format strings: use `|` as field separator, never `\t` or control chars.**
+  When Fleet launches from Finder (or any GUI launch), macOS sets no `TERM` in the
+  environment. Without `TERM`, tmux sanitizes all non-printable control characters
+  in format string output to `_`. So `#{session_name}\t#{@fleet_state}` produces
+  `name_state` instead of `name\tstate`, breaking every `split(separator: "\t")`
+  and silently dropping all sessions. Pipe (`|`) is printable and never appears in
+  session names, state values, or typical paths — use it exclusively.
 - **Never call `Tmux.run` (blocking `Process.waitUntilExit`) from SwiftUI view
   code** — crashed the app inside `updateNSView` (nested run loop). A lint
   test (`ViewLayerLintTests`) enforces it; off-main dispatch is the escape.

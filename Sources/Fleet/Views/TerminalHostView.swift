@@ -138,7 +138,7 @@ final class TerminalCache {
 
         v.startProcess(
             executable: Tmux.bin,
-            args: ["attach", "-t", "=\(session)"],
+            args: ["-S", Tmux.socketPath, "attach", "-t", "=\(session)"],
             environment: envArray,
             execName: nil
         )

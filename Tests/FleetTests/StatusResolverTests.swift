@@ -7,9 +7,9 @@ import XCTest
 final class StatusResolverTests: XCTestCase {
     typealias State = AgentSession.State
 
-    /// A tmux `list-panes` line: session \t @fleet_state \t cwd \t @fleet_sid
+    /// A tmux `list-panes` line: session|@fleet_state|cwd|@fleet_sid
     private func line(_ session: String, state: String = "", cwd: String = "/r", sid: String = "") -> String {
-        [session, state, cwd, sid].joined(separator: "\t")
+        [session, state, cwd, sid].joined(separator: "|")
     }
 
     private func resolve(_ lines: [String],
@@ -88,10 +88,8 @@ final class StatusResolverTests: XCTestCase {
     }
 
     func testGarbageMegaLineIsDroppedWhenNotAKnownSession() {
-        // Regression (2026-09-02): after Cmd-Q the status query came back with
-        // its tab separators collapsed, so a whole "name state path sid" line
-        // became one bogus session name that then failed to attach. Cross-
-        // checking against the real session list must reject it.
+        // Cross-checking against the real session list must reject any line
+        // whose parsed name isn't a known tmux session.
         let garbage = "fleet_busy_/Users/testuser/git/.worktrees/myapp/testMyApp_"
         let r = resolve([garbage, line("api-server", state: "done")],
                         valid: ["fleet", "api-server"])

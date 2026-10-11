@@ -232,6 +232,14 @@ enum EnvironmentSetup {
         if [ -n "${TMUX_PANE:-}" ]; then
           tmux set -pq -t "$TMUX_PANE" @fleet_state done
           tmux select-pane -t "$TMUX_PANE" -T "✅ $name" 2>/dev/null
+          # Rename the Claude conversation to match the Fleet session name.
+          # @fleet_pending_rename is a one-shot option set at spawn time; cleared
+          # here so it only fires on the first SessionStart, not on Stop.
+          pending_rename="$(tmux show -pqv -t "$TMUX_PANE" @fleet_pending_rename 2>/dev/null)"
+          if [ -n "$pending_rename" ]; then
+            tmux set -pqu -t "$TMUX_PANE" @fleet_pending_rename
+            tmux send-keys -t "$TMUX_PANE" "/rename $pending_rename" Enter
+          fi
           tmux refresh-client -S 2>/dev/null
         fi
         ;;

@@ -38,7 +38,7 @@ struct NewAgentSheet: View {
                     .foregroundStyle(.secondary)
                 Text("New Agent")
                     .font(.title2.bold())
-                Text("Pick a folder and optionally name the task")
+                Text("Pick a folder and optionally name the session")
                     .font(.callout)
                     .foregroundStyle(.tertiary)
             }
@@ -56,9 +56,9 @@ struct NewAgentSheet: View {
                     folderCard
                 }
 
-                // Task name
+                // Session name
                 VStack(alignment: .leading, spacing: 5) {
-                    Text("Task")
+                    Text("Session name")
                         .font(.caption.weight(.medium))
                         .foregroundStyle(.secondary)
                     TextField("fix-auth, refactor-api, … (optional)", text: $task)

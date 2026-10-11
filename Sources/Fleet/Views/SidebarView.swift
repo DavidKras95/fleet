@@ -22,12 +22,12 @@ private struct NewAgentButton: View {
                 Text("New Agent")
                     .font(.system(size: 13, weight: .semibold))
             }
-            .foregroundStyle(hovered ? Color.white : Color.white.opacity(0.5))
+            .foregroundStyle(hovered ? Color.primary : Color.secondary)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 8)
             .background(
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(Color.white.opacity(hovered ? 0.08 : 0))
+                    .fill(Color.primary.opacity(hovered ? 0.08 : 0))
             )
             .animation(.spring(response: 0.25, dampingFraction: 0.7), value: hovered)
         }

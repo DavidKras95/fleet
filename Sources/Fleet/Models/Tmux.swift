@@ -1,3 +1,4 @@
+import Darwin
 import Foundation
 
 /// Thin shell-out wrapper around the tmux binary. tmux is the session engine:
@@ -6,11 +7,18 @@ enum Tmux {
     /// Prefers a tmux bundled inside the app, then a system install.
     static let bin: String = Executables.find("tmux") ?? "tmux"
 
+    /// Explicit socket path so every subprocess connects to the same server
+    /// regardless of launch environment. macOS sets TMPDIR=/var/folders/… for
+    /// GUI apps (different from the shell that started the tmux server), and
+    /// tmux uses TMPDIR to locate its socket — so Finder-launched Fleet would
+    /// connect to a brand-new empty server without this pin.
+    static let socketPath: String = "/private/tmp/tmux-\(getuid())/default"
+
     @discardableResult
     static func run(_ args: [String]) -> (status: Int32, out: String) {
         let p = Process()
         p.executableURL = URL(fileURLWithPath: bin)
-        p.arguments = args
+        p.arguments = ["-S", socketPath] + args
         let out = Pipe()
         p.standardOutput = out
         p.standardError = Pipe()

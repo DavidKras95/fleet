@@ -265,8 +265,11 @@ final class FleetStore: ObservableObject {
                 ? Set(sOut.split(separator: "\n").map(String.init))
                 : nil
 
+            // Use | as field separator — tmux replaces control chars (\t, \x01, …)
+            // with _ when TERM is unset (Finder/GUI launch). Pipe is printable and
+            // never appears in tmux session names or state values.
             let (status, out) = Tmux.run(["list-panes", "-a", "-F",
-                                          "#{session_name}\t#{@fleet_state}\t#{pane_current_path}\t#{@fleet_sid}"])
+                                          "#{session_name}|#{@fleet_state}|#{pane_current_path}|#{@fleet_sid}"])
             let paneLines = status == 0 ? out.split(separator: "\n").map(String.init) : []
             let states = StatusResolver.resolve(
                 paneLines: paneLines,
@@ -276,11 +279,11 @@ final class FleetStore: ObservableObject {
                 cwdState: Self.cwdState(forPath:))
 
             let (wStatus, wOut) = Tmux.run(["list-windows", "-a", "-F",
-                                            "#{session_name}\t#{window_index}\t#{window_name}\t#{window_active}"])
+                                            "#{session_name}|#{window_index}|#{window_name}|#{window_active}"])
             var tabMap: [String: [SessionTab]] = [:]
             if wStatus == 0 {
                 for line in wOut.split(separator: "\n") {
-                    let parts = line.split(separator: "\t", omittingEmptySubsequences: false)
+                    let parts = line.split(separator: "|", omittingEmptySubsequences: false)
                     guard parts.count >= 4, !ignored.contains(String(parts[0])),
                           let index = Int(parts[1]) else { continue }
                     tabMap[String(parts[0]), default: []]
@@ -383,8 +386,13 @@ final class FleetStore: ObservableObject {
             Tmux.run(["set", "-pq", "-t", "=\(name):", "@fleet_srcdir", directory])
         }
         if autoStartClaude {
-            // Typed into the shell (not exec'd) so the shell survives if
-            // claude exits, and the user's PATH/aliases apply.
+            // If the session was named, store it as a one-shot pane option.
+            // The hook reads it on SessionStart (when Claude's prompt is ready)
+            // and sends /rename then — see EnvironmentSetup.hookScript done case.
+            if !requestedTask.isEmpty {
+                Tmux.run(["set", "-pq", "-t", "=\(name):", "@fleet_pending_rename", requestedTask])
+            }
+            // Typed into the shell (not exec'd) so the shell survives if claude exits.
             Tmux.run(["send-keys", "-t", "=\(name):", "claude", "Enter"])
             initializingSessions.insert(name)
             let sessionName = name
