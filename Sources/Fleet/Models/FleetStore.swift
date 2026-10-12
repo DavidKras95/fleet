@@ -374,7 +374,9 @@ final class FleetStore: ObservableObject {
             dir = wt
         }
 
-        guard Tmux.run(["new-session", "-d", "-s", name, "-c", dir]).status == 0 else {
+        // -x/-y: explicit dimensions so tmux doesn't need to query a terminal
+        // (required when no server is running yet — e.g. fresh install).
+        guard Tmux.run(["new-session", "-d", "-x", "220", "-y", "50", "-s", name, "-c", dir]).status == 0 else {
             lastError = "tmux could not create session \(name)."
             return nil
         }

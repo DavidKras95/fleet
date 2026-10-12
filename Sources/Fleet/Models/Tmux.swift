@@ -12,7 +12,16 @@ enum Tmux {
     /// GUI apps (different from the shell that started the tmux server), and
     /// tmux uses TMPDIR to locate its socket — so Finder-launched Fleet would
     /// connect to a brand-new empty server without this pin.
-    static let socketPath: String = "/private/tmp/tmux-\(getuid())/default"
+    static let socketPath: String = {
+        let path = "/private/tmp/tmux-\(getuid())/default"
+        // Pre-create the directory so tmux doesn't have to on first run.
+        // Permissions 0700: tmux requires this exact mode on its socket dir.
+        let dir = (path as NSString).deletingLastPathComponent
+        try? FileManager.default.createDirectory(
+            atPath: dir, withIntermediateDirectories: true,
+            attributes: [.posixPermissions: 0o700])
+        return path
+    }()
 
     @discardableResult
     static func run(_ args: [String]) -> (status: Int32, out: String) {
