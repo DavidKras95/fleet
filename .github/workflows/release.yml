@@ -96,7 +96,12 @@ jobs:
           xcrun notarytool submit dist/Fleet-notarize.zip \
             --apple-id "$APPLE_ID" --team-id "$TEAM_ID" \
             --password "$APP_PASSWORD" --wait
-          xcrun stapler staple dist/Fleet.app
+          for i in 1 2 3 4 5; do
+            xcrun stapler staple dist/Fleet.app && break
+            echo "Staple attempt $i failed, retrying in 15s..."
+            sleep 15
+          done
+          xcrun stapler validate dist/Fleet.app
           rm dist/Fleet-notarize.zip
 
       - name: Package release zip
