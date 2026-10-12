@@ -35,6 +35,19 @@
         length="3914800"
         type="application/octet-stream"/>
 </item>
+        <item>
+    <title>Fleet 1.0.2</title>
+    <sparkle:releaseNotesLink>https://github.com/DavidKras95/fleet/releases/tag/v1.0.2</sparkle:releaseNotesLink>
+    <sparkle:version>20261012.100935</sparkle:version>
+    <sparkle:shortVersionString>1.0.2</sparkle:shortVersionString>
+    <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+    <pubDate>Mon, 12 Oct 2026 10:11:16 +0000</pubDate>
+    <enclosure
+        url="https://github.com/DavidKras95/fleet/releases/download/v1.0.2/Fleet-v1.0.2.zip"
+        sparkle:edSignature="oqi5yqi4/wASjp6zg9qTzI5aP5uJ6bH5SMLwqA+4pncJoAjV2dMAvjPG5KjhpuCSCKA7j3YYnL2bMIGVsRGuDQ=="
+        length="3914975"
+        type="application/octet-stream"/>
+</item>
         <!-- APPCAST_INSERT_POINT -->
     </channel>
 </rss>
