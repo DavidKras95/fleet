@@ -8,10 +8,11 @@
         <description>Fleet changelog — automatic update feed</description>
         <language>en</language>
         <!-- Release entries are prepended here automatically by the release workflow. -->
+        <!-- sparkle:version must be CFBundleVersion (timestamp), not the marketing version. -->
         <item>
     <title>Fleet 1.0.0</title>
     <sparkle:releaseNotesLink>https://github.com/DavidKras95/fleet/releases/tag/v1.0.0</sparkle:releaseNotesLink>
-    <sparkle:version>1.0.0</sparkle:version>
+    <sparkle:version>20261007.083120</sparkle:version>
     <sparkle:shortVersionString>1.0.0</sparkle:shortVersionString>
     <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
     <pubDate>Wed, 07 Oct 2026 08:31:49 +0000</pubDate>
@@ -24,7 +25,7 @@
         <item>
     <title>Fleet 1.0.1</title>
     <sparkle:releaseNotesLink>https://github.com/DavidKras95/fleet/releases/tag/v1.0.1</sparkle:releaseNotesLink>
-    <sparkle:version>1.0.1</sparkle:version>
+    <sparkle:version>20261011.183103</sparkle:version>
     <sparkle:shortVersionString>1.0.1</sparkle:shortVersionString>
     <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
     <pubDate>Sun, 11 Oct 2026 18:31:30 +0000</pubDate>
@@ -35,17 +36,5 @@
         type="application/octet-stream"/>
 </item>
         <!-- APPCAST_INSERT_POINT -->
-        <item>
-            <title>Fleet 1.0.1 (test)</title>
-            <pubDate>Sat, 04 Oct 2026 12:00:00 +0000</pubDate>
-            <enclosure
-                url="https://github.com/DavidKras95/fleet/releases/download/v1.0.1-test/Fleet-v1.0.1-test.zip"
-                sparkle:version="2"
-                sparkle:shortVersionString="1.0.1"
-                sparkle:edSignature="b+AYJRwH2GBf+NgshajpQPM7xKK3vbgtmjT/F8ap9sf7KagrGqWUmVpyFqMgNu/FGCtmCNsij3oB7aZyFHdkAA=="
-                length="3841366"
-                type="application/octet-stream"
-            />
-        </item>
     </channel>
 </rss>

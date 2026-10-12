@@ -120,6 +120,10 @@ jobs:
           VERSION="${TAG#v}"
           ZIP="dist/Fleet-${TAG}.zip"
           SIZE=$(stat -f%z "$ZIP")
+          # CFBundleVersion is a timestamp (YYYYmmdd.HHmmSS) stamped at build time.
+          # Sparkle compares sparkle:version against the running app's CFBundleVersion,
+          # so we must use the real build timestamp — not the marketing version string.
+          BUILD_NUMBER=$(/usr/libexec/PlistBuddy -c "Print CFBundleVersion" "dist/Fleet.app/Contents/Info.plist")
           # sign_update 2.x requires the key as a file, not a positional arg.
           KEY_FILE=$(mktemp)
           echo -n "$SPARKLE_PRIVATE_KEY" > "$KEY_FILE"
@@ -135,7 +139,7 @@ jobs:
           <item>
               <title>Fleet ${VERSION}</title>
               <sparkle:releaseNotesLink>${RELEASE_URL}</sparkle:releaseNotesLink>
-              <sparkle:version>${VERSION}</sparkle:version>
+              <sparkle:version>${BUILD_NUMBER}</sparkle:version>
               <sparkle:shortVersionString>${VERSION}</sparkle:shortVersionString>
               <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
               <pubDate>${PUBDATE}</pubDate>
