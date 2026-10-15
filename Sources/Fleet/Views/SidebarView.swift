@@ -295,22 +295,27 @@ struct StatusBadge: View {
     let state: AgentSession.State
     let size: CGFloat
     var unseen: Bool = false
-    @State private var animating = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         Group {
             switch state {
             case .input:
-                Circle()
-                    .fill(Color.red)
-                    .frame(width: size * 0.7, height: size * 0.7)
-                    .shadow(color: .red.opacity(0.9), radius: pulseOn ? 5 : 0.5)
-                    .opacity(pulseOn ? 1 : 0.25)
-                    .animation(
-                        reduceMotion ? nil
-                            : .easeInOut(duration: 0.45).repeatForever(autoreverses: true),
-                        value: pulseOn)
+                if reduceMotion {
+                    Circle()
+                        .fill(Color.red)
+                        .frame(width: size * 0.7, height: size * 0.7)
+                        .shadow(color: .red.opacity(0.9), radius: 5)
+                } else {
+                    TimelineView(.animation) { timeline in
+                        let p = pulse(timeline.date)
+                        Circle()
+                            .fill(Color.red)
+                            .frame(width: size * 0.7, height: size * 0.7)
+                            .shadow(color: .red.opacity(0.9), radius: p * 5)
+                            .opacity(0.25 + p * 0.75)
+                    }
+                }
             case .busy:
                 if reduceMotion {
                     // Static equivalent: a ring instead of a full dot reads
@@ -336,16 +341,22 @@ struct StatusBadge: View {
                 }
             case .done:
                 if unseen {
-                    Circle()
-                        .fill(Color.green)
-                        .frame(width: size * 0.7, height: size * 0.7)
-                        .shadow(color: .green.opacity(0.9), radius: pulseOn ? 8 : 0.5)
-                        .opacity(pulseOn ? 1 : 0.15)
-                        .scaleEffect(pulseOn ? 1.15 : 1.0)
-                        .animation(
-                            reduceMotion ? nil
-                                : .easeInOut(duration: 0.45).repeatForever(autoreverses: true),
-                            value: pulseOn)
+                    if reduceMotion {
+                        Circle()
+                            .fill(Color.green)
+                            .frame(width: size * 0.7, height: size * 0.7)
+                            .shadow(color: .green.opacity(0.9), radius: 8)
+                    } else {
+                        TimelineView(.animation) { timeline in
+                            let p = pulse(timeline.date)
+                            Circle()
+                                .fill(Color.green)
+                                .frame(width: size * 0.7, height: size * 0.7)
+                                .shadow(color: .green.opacity(0.9), radius: p * 8)
+                                .opacity(0.15 + p * 0.85)
+                                .scaleEffect(1.0 + p * 0.15)
+                        }
+                    }
                 } else {
                     Circle()
                         .fill(Color.green)
@@ -359,18 +370,13 @@ struct StatusBadge: View {
             }
         }
         .frame(width: size + 6, height: size + 6)
-        .onAppear { animating = true }
-        .onChange(of: state) { _, _ in restartAnimation() }
-        .onChange(of: unseen) { _, _ in restartAnimation() }
     }
 
-    /// Reduce Motion still needs full opacity for the "unseen" pulse states
-    /// so their color reads correctly — only the looping motion is dropped.
-    private var pulseOn: Bool { reduceMotion ? true : animating }
-
-    private func restartAnimation() {
-        guard !reduceMotion else { return }
-        animating = false
-        DispatchQueue.main.async { animating = true }
+    /// 0→1→0 sine pulse locked to wall clock — all badges share the same
+    /// phase so red and green always peak and dim together.
+    private func pulse(_ date: Date) -> Double {
+        let t = date.timeIntervalSinceReferenceDate
+        let phase = t.truncatingRemainder(dividingBy: 0.9) / 0.9
+        return sin(phase * .pi)
     }
 }
