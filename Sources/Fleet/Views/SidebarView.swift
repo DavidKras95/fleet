@@ -183,10 +183,11 @@ private struct SessionRow: View {
     @State private var hovering = false
 
     var body: some View {
+        let unseen = store.unseenDone.contains(session.name)
         HStack(spacing: 9) {
             StatusBadge(state: session.state,
                         size: store.uiFontSize + 2,
-                        unseen: store.unseenDone.contains(session.name))
+                        unseen: unseen)
             VStack(alignment: .leading, spacing: 1) {
                 // Every cube shows its project — consistent shape whether or
                 // not this session has a task name of its own.
@@ -221,10 +222,11 @@ private struct SessionRow: View {
         .overlay(
             RoundedRectangle(cornerRadius: 9)
                 .stroke(
-                    selected
-                        ? Color.accentColor
-                        : (session.state == .input ? Color.red.opacity(0.75) : Color.primary.opacity(0.08)),
-                    lineWidth: session.state == .input && !selected ? 1.5 : 1
+                    selected ? Color.accentColor
+                        : session.state == .input ? Color.red.opacity(0.75)
+                        : (session.state == .done && unseen) ? Color.green.opacity(0.75)
+                        : Color.primary.opacity(0.08),
+                    lineWidth: (!selected && (session.state == .input || (session.state == .done && unseen))) ? 1.5 : 1
                 )
         )
         // Response: instant feedback under the cursor, no debounce; a quick
