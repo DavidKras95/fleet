@@ -337,11 +337,12 @@ struct StatusBadge: View {
                     Circle()
                         .fill(Color.green)
                         .frame(width: size * 0.7, height: size * 0.7)
-                        .shadow(color: .green.opacity(0.9), radius: pulseOn ? 5 : 0.5)
-                        .opacity(pulseOn ? 1 : 0.25)
+                        .shadow(color: .green.opacity(0.9), radius: pulseOn ? 8 : 0.5)
+                        .opacity(pulseOn ? 1 : 0.15)
+                        .scaleEffect(pulseOn ? 1.15 : 1.0)
                         .animation(
                             reduceMotion ? nil
-                                : .easeInOut(duration: 0.5).repeatForever(autoreverses: true),
+                                : .easeInOut(duration: 0.45).repeatForever(autoreverses: true),
                             value: pulseOn)
                 } else {
                     Circle()
