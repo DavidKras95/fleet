@@ -4,6 +4,7 @@ import Foundation
 /// (nil = no default shortcut). Raw value is the stable persistence id.
 enum AppCommand: String, CaseIterable, Identifiable {
     case newAgent, newWindow, newTab, closePaneTab
+    case toggleSidebar
     case prevTab, nextTab, jumpWaiting, prevAgent, nextAgent
     case splitRight, splitDown
     case focusLeft, focusRight, focusUp, focusDown
@@ -19,6 +20,7 @@ enum AppCommand: String, CaseIterable, Identifiable {
         case .newWindow: return "New Window"
         case .newTab: return "New Tab"
         case .closePaneTab: return "Close Pane / Tab"
+        case .toggleSidebar: return "Toggle Sidebar"
         case .prevTab: return "Previous Tab"
         case .nextTab: return "Next Tab"
         case .jumpWaiting: return "Jump to Waiting Agent"
@@ -48,7 +50,7 @@ enum AppCommand: String, CaseIterable, Identifiable {
     /// Which settings section this command belongs to.
     var group: String {
         switch self {
-        case .newAgent, .newWindow, .newTab, .closePaneTab: return "Agents & Tabs"
+        case .newAgent, .newWindow, .newTab, .closePaneTab, .toggleSidebar: return "Agents & Tabs"
         case .prevTab, .nextTab, .jumpWaiting, .prevAgent, .nextAgent: return "Navigation"
         case .splitRight, .splitDown, .focusLeft, .focusRight, .focusUp, .focusDown,
              .resizeLeft, .resizeRight, .resizeUp, .resizeDown,
@@ -63,6 +65,7 @@ enum AppCommand: String, CaseIterable, Identifiable {
         case .newWindow: return KeyCombo(key: "n", modifiers: [.command, .shift])
         case .newTab: return KeyCombo(key: "t", modifiers: [.command])
         case .closePaneTab: return KeyCombo(key: "w", modifiers: [.command])
+        case .toggleSidebar: return KeyCombo(key: "b", modifiers: [.command])
         case .prevTab: return KeyCombo(key: "left", modifiers: [.command, .shift])
         case .nextTab: return KeyCombo(key: "right", modifiers: [.command, .shift])
         case .jumpWaiting: return KeyCombo(key: "return", modifiers: [.command])

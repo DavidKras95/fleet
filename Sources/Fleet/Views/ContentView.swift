@@ -5,8 +5,15 @@ struct ContentView: View {
     @StateObject private var win = WindowState()
     @State private var showWelcome = !UserDefaults.standard.bool(forKey: "hasSeenWelcome")
 
+    private var columnVisibility: Binding<NavigationSplitViewVisibility> {
+        Binding(
+            get: { win.sidebarVisible ? .all : .detailOnly },
+            set: { win.sidebarVisible = ($0 != .detailOnly) }
+        )
+    }
+
     var body: some View {
-        NavigationSplitView {
+        NavigationSplitView(columnVisibility: columnVisibility) {
             SidebarView()
                 .navigationSplitViewColumnWidth(min: 200, ideal: 240)
                 .toolbar {
