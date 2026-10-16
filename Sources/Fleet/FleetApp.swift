@@ -58,6 +58,11 @@ struct FleetCommands: Commands {
                 .disabled(win == nil)
             Button("New Window") { openWindow(id: "main") }
                 .keyboardShortcut(sc(.newWindow))
+            Button("Toggle Sidebar") {
+                withAnimation(.easeInOut(duration: 0.22)) { win?.sidebarVisible.toggle() }
+            }
+            .keyboardShortcut(sc(.toggleSidebar))
+            .disabled(win == nil)
             Divider()
             Button("New Tab") {
                 if let s = win?.selection { store.addTab(s) }
