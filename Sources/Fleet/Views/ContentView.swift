@@ -8,7 +8,11 @@ struct ContentView: View {
     private var columnVisibility: Binding<NavigationSplitViewVisibility> {
         Binding(
             get: { win.sidebarVisible ? .all : .detailOnly },
-            set: { win.sidebarVisible = ($0 != .detailOnly) }
+            set: { new in
+                withAnimation(.easeInOut(duration: 0.22)) {
+                    win.sidebarVisible = (new != .detailOnly)
+                }
+            }
         )
     }
 
