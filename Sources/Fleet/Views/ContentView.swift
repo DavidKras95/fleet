@@ -94,6 +94,11 @@ struct ContentView: View {
                 existing: names)
             store.markSeen(win.selection)
         }
+        .onChange(of: store.unseenDone) { _, _ in
+            // If the selected session just became "done", it's already being
+            // watched — mark it seen immediately without waiting for a re-tap.
+            store.markSeen(win.selection)
+        }
         .navigationTitle(win.selection ?? "Fleet")
     }
 }
