@@ -271,12 +271,36 @@ final class FleetStore: ObservableObject {
             let (status, out) = Tmux.run(["list-panes", "-a", "-F",
                                           "#{session_name}|#{@fleet_state}|#{pane_current_path}|#{@fleet_sid}"])
             let paneLines = status == 0 ? out.split(separator: "\n").map(String.init) : []
-            let states = StatusResolver.resolve(
+            var states = StatusResolver.resolve(
                 paneLines: paneLines,
                 ignoredSessions: ignored,
                 validSessions: validSessions,
                 sessionIdState: Self.sessionIdState,
                 cwdState: Self.cwdState(forPath:))
+
+            // Degrade stale busy signals to idle. The Stop hook doesn't fire in
+            // every Claude Code version/mode, leaving sessions permanently orange.
+            // The state file's mtime is the last time ANY hook fired for that
+            // session — if it's been busy for >300s with no hook activity, the
+            // session has been waiting for input and we just didn't get notified.
+            let staleThreshold: TimeInterval = 300
+            var sessionSids: [String: String] = [:]
+            for line in paneLines {
+                let parts = line.split(separator: "|", omittingEmptySubsequences: false).map(String.init)
+                guard let name = parts.first, !name.isEmpty, parts.count > 3, !parts[3].isEmpty,
+                      sessionSids[name] == nil else { continue }
+                sessionSids[name] = parts[3]
+            }
+            let sidDir = NSHomeDirectory() + "/.cache/fleet/session-state/"
+            let now = Date()
+            for (name, st) in states where st == .busy {
+                guard let sid = sessionSids[name] else { continue }
+                let file = sidDir + sid + ".state"
+                guard let attrs = try? FileManager.default.attributesOfItem(atPath: file),
+                      let mtime = attrs[.modificationDate] as? Date,
+                      now.timeIntervalSince(mtime) > staleThreshold else { continue }
+                states[name] = .idle
+            }
 
             let (wStatus, wOut) = Tmux.run(["list-windows", "-a", "-F",
                                             "#{session_name}|#{window_index}|#{window_name}|#{window_active}"])
