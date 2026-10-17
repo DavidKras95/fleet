@@ -39,6 +39,18 @@ struct ContentView: View {
                         }
                         .help("Appearance")
                     }
+                    ToolbarItem {
+                        Button { win.showResumeSession = true } label: {
+                            Image(systemName: "clock.arrow.circlepath")
+                        }
+                        .help("Resume Session")
+                    }
+                    ToolbarItem {
+                        Button { win.showNewAgent = true } label: {
+                            Image(systemName: "plus")
+                        }
+                        .help("New Agent (⌘N)")
+                    }
                 }
         } detail: {
             if store.installingTools || !store.preflightIssues.isEmpty {
@@ -65,6 +77,10 @@ struct ContentView: View {
         .focusedSceneObject(win)
         .sheet(isPresented: $win.showNewAgent) {
             NewAgentSheet()
+                .environmentObject(win)
+        }
+        .sheet(isPresented: $win.showResumeSession) {
+            ResumeSessionSheet()
                 .environmentObject(win)
         }
         .sheet(isPresented: $showWelcome, onDismiss: {

@@ -49,6 +49,7 @@ final class WindowState: ObservableObject {
 
     @Published var selection: String?
     @Published var showNewAgent = false
+    @Published var showResumeSession = false
     @Published var sidebarVisible = true
     let terminals = TerminalCache()
 
