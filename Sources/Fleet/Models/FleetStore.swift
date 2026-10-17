@@ -361,7 +361,14 @@ final class FleetStore: ObservableObject {
 
     /// Starts a session in any folder. Returns the session name on success.
     @discardableResult
-    func spawn(directory: String, task: String, worktree: Bool) -> String? {
+    func spawn(directory: String, task: String, worktree: Bool, resumeId: String? = nil) -> String? {
+        if let resumeId {
+            guard ClaudeSessionScanner.isValidId(resumeId) else { return nil }
+            guard FileManager.default.fileExists(atPath: directory) else {
+                lastError = "The folder for that session no longer exists: \(directory)"
+                return nil
+            }
+        }
         let base = SessionNaming.baseName(forDirectory: directory)
         let requestedTask = SessionNaming.sanitize(task)
         // "New Agent" always creates a NEW session — multiple sessions of the
@@ -411,15 +418,20 @@ final class FleetStore: ObservableObject {
             // Source repo dir, so the worktree can be removed on retire.
             Tmux.run(["set", "-pq", "-t", "=\(name):", "@fleet_srcdir", directory])
         }
-        if autoStartClaude {
+        if autoStartClaude || resumeId != nil {
             // If the session was named, store it as a one-shot pane option.
             // The hook reads it on SessionStart (when Claude's prompt is ready)
             // and sends /rename then — see EnvironmentSetup.hookScript done case.
             if !requestedTask.isEmpty {
                 Tmux.run(["set", "-pq", "-t", "=\(name):", "@fleet_pending_rename", requestedTask])
             }
+            if let resumeId {
+                // Link the pane to its conversation's status file right away.
+                Tmux.run(["set", "-pq", "-t", "=\(name):", "@fleet_sid", resumeId])
+            }
             // Typed into the shell (not exec'd) so the shell survives if claude exits.
-            Tmux.run(["send-keys", "-t", "=\(name):", "claude", "Enter"])
+            let command = resumeId.map { "claude --resume \($0)" } ?? "claude"
+            Tmux.run(["send-keys", "-t", "=\(name):", command, "Enter"])
             initializingSessions.insert(name)
             let sessionName = name
             Task { @MainActor [weak self] in

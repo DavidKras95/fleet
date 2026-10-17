@@ -9,17 +9,19 @@ private final class SidebarClickContext {
     var rowFrames: [String: CGRect] = [:]
 }
 
-private struct NewAgentButton: View {
+private struct SidebarActionButton: View {
+    let title: String
+    let icon: String
     let action: () -> Void
     @State private var hovered = false
 
     var body: some View {
         Button(action: action) {
             HStack(spacing: 6) {
-                Image(systemName: "plus.circle.fill")
+                Image(systemName: icon)
                     .font(.system(size: 15, weight: .semibold))
                     .scaleEffect(hovered ? 1.15 : 1.0)
-                Text("New Agent")
+                Text(title)
                     .font(.system(size: 13, weight: .semibold))
             }
             .foregroundStyle(hovered ? Color.primary : Color.secondary)
@@ -86,9 +88,12 @@ struct SidebarView: View {
                         )
                     )
             }
-            NewAgentButton { win.showNewAgent = true }
-            .listRowSeparator(.hidden)
-            .listRowInsets(EdgeInsets(top: 6, leading: 8, bottom: 6, trailing: 8))
+            SidebarActionButton(title: "Resume Session", icon: "clock.arrow.circlepath") { win.showResumeSession = true }
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 6, leading: 8, bottom: 0, trailing: 8))
+            SidebarActionButton(title: "New Agent", icon: "plus.circle.fill") { win.showNewAgent = true }
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 0, leading: 8, bottom: 6, trailing: 8))
         }
         .listStyle(.sidebar)
         .onDrop(of: [UTType.plainText], isTargeted: nil) { _ in
